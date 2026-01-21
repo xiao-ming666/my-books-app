@@ -4,7 +4,6 @@
   "main": "index.js",
   "scripts": {
   "start": "node server.js",
-  "install": "npm install" 
   },
   "keywords": [],
   "author": "",
