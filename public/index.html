@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <title>我的全栈书单</title>
+</head>
+<body>
+    <h1>📚 AI 时代的全栈之路</h1>
+    
+    <div>
+        <input type="text" id="bookInput" placeholder="输入你想学习的技术...">
+        <button onclick="fetchBooks()">搜索</button>
+        <button onclick="addBook()">添加到数据库</button>
+    </div>
+
+    <ul id="bookList"></ul>
+
+    <script>
+        // A. 获取书单并渲染
+        async function fetchBooks() {
+            const input = document.getElementById('bookInput');
+            const query = input.value ? `?title=${encodeURIComponent(input.value)}` : '';
+            const res = await fetch(`/api/books${query}`);
+            const data = await res.json();
+            const list = document.getElementById('bookList');
+            list.innerHTML = data.map(book => `
+                <li>
+                    ${book.title} 
+                    <small>(${new Date(book.createdAt).toLocaleString()})</small>
+                    <button onclick="deleteBook('${book._id}')">删除</button>
+                    <button onclick="updateBook('${book._id}','${book.title}')">更新</button>
+                </li>
+            `).join('');
+        }
+
+        // B. 添加书籍
+        async function addBook() {
+            const input = document.getElementById('bookInput');
+            // if (!input.value) return alert('请输入内容');
+
+            const res = await fetch('/api/books', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ title: input.value })
+            }).catch(err => alert('添加失败: ' + err.message));
+
+            if (res.ok) {
+                input.value = ''; // 清空
+                fetchBooks();    // 刷新列表
+            }
+        }
+
+        async function deleteBook(id) {
+            const res = await fetch(`/api/books/${id}`, { method: 'DELETE' });
+            if (res.ok) fetchBooks();
+        }
+
+        async function updateBook(id, oldTitle) {
+            const newTitle = prompt('请输入新的书名', oldTitle);
+            if (!newTitle) return;
+
+            const res = await fetch(`/api/books/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ title: newTitle })
+    });
+            if (res.ok) fetchBooks();
+        }
+
+        // 页面加载时自动执行一次
+        fetchBooks();
+    </script>
+</body>
+</html>
